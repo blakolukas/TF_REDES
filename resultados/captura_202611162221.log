@@ -1,0 +1,23 @@
+# captura iniciada em 2026-11-16 22:21:57
+2026-11-16 22:22:13     172.10.20.2 -> 172.10.30.10    DNS       54B  DNS consulta A loja.lab
+2026-11-16 22:22:13     172.10.20.2 -> 172.10.30.10    DNS       54B  DNS consulta AAAA loja.lab
+2026-11-16 22:22:13    172.10.30.10 -> 172.10.20.2     DNS       70B  DNS resposta loja.lab -> 172.10.30.10
+2026-11-16 22:22:13    172.10.30.10 -> 172.10.20.2     DNS       54B  DNS resposta loja.lab -> (sem A)
+2026-11-16 22:22:13     172.10.20.2 -> 172.10.30.10    HTTPS    569B  TLS ClientHello SNI=loja.lab
+2026-11-16 22:22:14     172.10.20.2 -> 172.10.30.10    DNS       55B  DNS consulta A banco.lab
+2026-11-16 22:22:14     172.10.20.2 -> 172.10.30.10    DNS       55B  DNS consulta AAAA banco.lab
+2026-11-16 22:22:14    172.10.30.10 -> 172.10.20.2     DNS       71B  DNS resposta banco.lab -> 172.10.30.10
+2026-11-16 22:22:14    172.10.30.10 -> 172.10.20.2     DNS       55B  DNS resposta banco.lab -> (sem A)
+2026-11-16 22:22:14     172.10.20.2 -> 172.10.30.10    HTTPS    569B  TLS ClientHello SNI=banco.lab
+2026-11-16 22:22:16     172.10.20.2 -> 172.10.30.10    DNS       58B  DNS consulta A noticias.lab
+2026-11-16 22:22:16     172.10.20.2 -> 172.10.30.10    DNS       58B  DNS consulta AAAA noticias.lab
+2026-11-16 22:22:16    172.10.30.10 -> 172.10.20.2     DNS       74B  DNS resposta noticias.lab -> 172.10.30.10
+2026-11-16 22:22:16    172.10.30.10 -> 172.10.20.2     DNS       58B  DNS resposta noticias.lab -> (sem A)
+2026-11-16 22:22:16     172.10.20.2 -> 172.10.30.10    HTTPS    569B  TLS ClientHello SNI=noticias.lab
+2026-11-16 22:22:17     172.10.20.2 -> 172.10.30.10    DNS       55B  DNS consulta A video.lab
+2026-11-16 22:22:17     172.10.20.2 -> 172.10.30.10    DNS       55B  DNS consulta AAAA video.lab
+2026-11-16 22:22:17    172.10.30.10 -> 172.10.20.2     DNS       71B  DNS resposta video.lab -> 172.10.30.10
+2026-11-16 22:22:17    172.10.30.10 -> 172.10.20.2     DNS       55B  DNS resposta video.lab -> (sem A)
+2026-11-16 22:22:17     172.10.20.2 -> 172.10.30.10    HTTPS    569B  TLS ClientHello SNI=video.lab
+2026-11-16 22:22:18     172.10.20.2 -> 172.10.30.10    HTTPS    569B  TLS ClientHello SNI=loja.lab
+# captura encerrada em 2026-11-16 22:35:56

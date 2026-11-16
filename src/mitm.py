@@ -278,8 +278,12 @@ def main():
     # 8) Encerramento: para threads, cura ARP, restaura ip_forward, fecha arquivos
     for t in threads:
         t.join(timeout=3)
-    if not args.sem_forward:
-        curar(sock_envio, meu_mac_txt, vitima, mac_vitima, gateway, mac_gateway)
+    # Self-healing: a vitima/gateway foram envenenados pelo laco_envenenador
+    # (que roda sempre, inclusive no modo --sem-forward), entao a cura das caches
+    # ARP tambem precisa rodar sempre -- requisito 3.3 (restauracao obrigatoria,
+    # imediata e limpa). So a restauracao do ip_forward depende do modo, e ela ja
+    # e coberta por sysctls.restaurar().
+    curar(sock_envio, meu_mac_txt, vitima, mac_vitima, gateway, mac_gateway)
     sysctls.restaurar()
     print("[*] sysctls restaurados (ip_forward, send_redirects)")
     persist.salvar_resumo(estado)

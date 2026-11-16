@@ -1,0 +1,15 @@
+FROM debian:bookworm-slim
+
+# GATEWAY da rede local: fica em duas redes (rede_lab e rede_externa) e roteia o
+# trafego da vitima ate os servidores. E o "roteador" que o ataque ARP engana:
+# a vitima acredita falar com ele, mas quem repassa e o atacante.
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       iproute2 iptables iputils-ping procps \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY containers/gateway/entrypoint.sh /usr/local/bin/gateway-entrypoint
+RUN chmod +x /usr/local/bin/gateway-entrypoint
+
+ENTRYPOINT ["/usr/local/bin/gateway-entrypoint"]

@@ -1,0 +1,21 @@
+FROM debian:bookworm-slim
+
+# SERVIDORES: a "mini-internet" isolada do laboratorio. Em um unico host beyond
+# the gateway, oferece tudo que a vitima acessa, de forma deterministica:
+#   - DNS  (dnsmasq, UDP/53)  resolve qualquer *.lab para este proprio IP
+#   - HTTP (python, TCP/80)   pagina em texto claro (expoe tudo ao MITM)
+#   - HTTPS(python, TCP/443)  TLS com SNI (so o SNI vaza; o resto e cifrado)
+#   - DoH  (python, TCP/8443) DNS-over-HTTPS, para o Experimento 2 (DoH)
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       dnsmasq openssl python3 iproute2 iputils-ping curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY containers/servidores/web.py /lab/servidores/web.py
+COPY containers/servidores/entrypoint.sh /usr/local/bin/servidores-entrypoint
+RUN chmod +x /usr/local/bin/servidores-entrypoint
+
+ENV PYTHONUNBUFFERED=1
+WORKDIR /lab/servidores
+ENTRYPOINT ["/usr/local/bin/servidores-entrypoint"]

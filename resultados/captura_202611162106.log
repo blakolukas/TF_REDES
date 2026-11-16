@@ -1,0 +1,9 @@
+# captura iniciada em 2026-11-16 21:06:45
+2026-11-16 21:07:01     172.10.20.2 -> 172.10.30.10    DNS       54B  DNS consulta A loja.lab
+2026-11-16 21:07:01     172.10.20.2 -> 172.10.30.10    DNS       54B  DNS consulta AAAA loja.lab
+2026-11-16 21:07:07     172.10.20.2 -> 172.10.30.10    DNS       55B  DNS consulta A banco.lab
+2026-11-16 21:07:07     172.10.20.2 -> 172.10.30.10    DNS       55B  DNS consulta AAAA banco.lab
+2026-11-16 21:07:13     172.10.20.2 -> 172.10.30.10    DNS       58B  DNS consulta A noticias.lab
+2026-11-16 21:07:13     172.10.20.2 -> 172.10.30.10    DNS       58B  DNS consulta AAAA noticias.lab
+2026-11-16 21:07:19     172.10.20.2 -> 172.10.30.10    DNS       55B  DNS consulta A video.lab
+2026-11-16 21:07:19     172.10.20.2 -> 172.10.30.10    DNS       55B  DNS consulta AAAA video.lab

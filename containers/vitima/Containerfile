@@ -1,0 +1,16 @@
+FROM debian:bookworm-slim
+
+# VITIMA: estacao que gera trafego web (DNS, HTTP e HTTPS). Sua rota default
+# aponta para o GATEWAY e seu DNS para os SERVIDORES do laboratorio, de modo que
+# todo o trafego passa pela rede_lab onde o atacante esta posicionado.
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       curl iproute2 iputils-ping dnsutils ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY containers/vitima/entrypoint.sh /usr/local/bin/vitima-entrypoint
+COPY scripts/gerar-trafego.sh /usr/local/bin/gerar-trafego
+RUN chmod +x /usr/local/bin/vitima-entrypoint /usr/local/bin/gerar-trafego
+
+ENTRYPOINT ["/usr/local/bin/vitima-entrypoint"]

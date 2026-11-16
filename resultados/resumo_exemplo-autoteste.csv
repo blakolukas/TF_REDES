@@ -1,0 +1,6 @@
+dominio,ip_destino,protocolos,total_bytes
+noticias.lab,172.10.30.10;172.10.30.12,DNS;HTTPS,348
+banco.lab,172.10.30.10;172.10.30.11,DNS;HTTPS,339
+video.lab,172.10.30.10;172.10.30.13,DNS;HTTPS,339
+loja.lab,172.10.30.10,DNS;HTTPS,336
+site-http.lab,172.10.30.10,DNS;HTTP,265

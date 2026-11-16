@@ -1,0 +1,9 @@
+"ARP (envenenamento)" arp
+"ARP replies forjados" arp.opcode == 2
+"DNS (consultas/respostas)" dns
+"HTTP em texto claro" http
+"TLS ClientHello (SNI)" tls.handshake.type == 1
+"SNI extraido" tls.handshake.extensions_server_name
+"Fluxo da vitima" ip.addr == 172.10.20.2
+"HTTP ou HTTPS" tcp.port == 80 || tcp.port == 443
+"Correlacao DNS/TLS" dns || tls.handshake.type == 1

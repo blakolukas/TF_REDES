@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.compose.generated.yaml
+.lab-n
+# evidencias reais da execucao (geradas localmente); versione apenas se for entregar
+resultados/*.pcapng
+resultados/*.dumpcap.log

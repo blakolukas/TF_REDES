@@ -1,0 +1,35 @@
+FROM debian:bookworm-slim
+
+# Imagem do ATACANTE: roda a aplicacao MITM (Python/raw socket) e oferece o
+# Wireshark via navegador (NoVNC em :6080) para a captura de evidencia exigida
+# nos experimentos. Herda o aparato de captura do container 'monitor' das fases
+# anteriores (Xvfb + x11vnc + websockify + Wireshark + dumpcap).
+ENV DEBIAN_FRONTEND=noninteractive
+RUN printf 'wireshark-common wireshark-common/install-setuid boolean true\n' | debconf-set-selections \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+       dbus-x11 iproute2 iptables iputils-ping libcap2-bin novnc openbox procps \
+       python3 supervisor tcpdump tshark websockify wireshark wireshark-common \
+       x11-xserver-utils x11vnc xvfb \
+    && rm -rf /var/lib/apt/lists/* \
+    && setcap cap_net_raw,cap_net_admin=eip /usr/bin/dumpcap \
+    && useradd --create-home --shell /bin/sh --groups wireshark lab
+
+COPY containers/atacante/start-wireshark.sh /usr/local/bin/start-wireshark
+COPY containers/atacante/capture.sh /usr/local/bin/capture
+COPY containers/atacante/entrypoint.sh /usr/local/bin/entrypoint
+COPY containers/atacante/supervisord.conf /etc/supervisor/conf.d/lab.conf
+COPY containers/atacante/index.html /usr/share/novnc/index.html
+COPY containers/atacante/dfilters /home/lab/.config/wireshark/dfilters
+COPY containers/atacante/recent /home/lab/.config/wireshark/recent
+
+ENV PYTHONPATH=/lab/src \
+    PYTHONUNBUFFERED=1
+
+RUN chmod 0755 /usr/local/bin/start-wireshark /usr/local/bin/capture /usr/local/bin/entrypoint \
+    && chown -R lab:lab /home/lab/.config \
+    && mkdir -p /tmp/.X11-unix && chmod 1777 /tmp/.X11-unix
+
+WORKDIR /lab
+EXPOSE 6080
+CMD ["/usr/local/bin/entrypoint"]

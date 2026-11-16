@@ -1,0 +1,17 @@
+# captura iniciada em 2026-11-16 09:49:25
+2026-11-16 09:49:25     172.10.20.2 -> 172.10.30.10    DNS       59B  DNS consulta A site-http.lab
+2026-11-16 09:49:25    172.10.30.10 -> 172.10.20.2     DNS       75B  DNS resposta site-http.lab -> 172.10.30.10
+2026-11-16 09:49:25     172.10.20.2 -> 172.10.30.10    HTTP     131B  HTTP GET http://site-http.lab/segredo  UA='curl/8.0' Cookie='sessao=abc123'
+2026-11-16 09:49:25     172.10.20.2 -> 172.10.30.10    DNS       54B  DNS consulta A loja.lab
+2026-11-16 09:49:25    172.10.30.10 -> 172.10.20.2     DNS       70B  DNS resposta loja.lab -> 172.10.30.10
+2026-11-16 09:49:25     172.10.20.2 -> 172.10.30.10    HTTPS    109B  TLS ClientHello SNI=loja.lab
+2026-11-16 09:49:25     172.10.20.2 -> 172.10.30.10    DNS       55B  DNS consulta A banco.lab
+2026-11-16 09:49:25    172.10.30.10 -> 172.10.20.2     DNS       71B  DNS resposta banco.lab -> 172.10.30.11
+2026-11-16 09:49:25     172.10.20.2 -> 172.10.30.11    HTTPS    110B  TLS ClientHello SNI=banco.lab
+2026-11-16 09:49:25     172.10.20.2 -> 172.10.30.10    DNS       58B  DNS consulta A noticias.lab
+2026-11-16 09:49:25    172.10.30.10 -> 172.10.20.2     DNS       74B  DNS resposta noticias.lab -> 172.10.30.12
+2026-11-16 09:49:25     172.10.20.2 -> 172.10.30.12    HTTPS    113B  TLS ClientHello SNI=noticias.lab
+2026-11-16 09:49:25     172.10.20.2 -> 172.10.30.10    DNS       55B  DNS consulta A video.lab
+2026-11-16 09:49:25    172.10.30.10 -> 172.10.20.2     DNS       71B  DNS resposta video.lab -> 172.10.30.13
+2026-11-16 09:49:25     172.10.20.2 -> 172.10.30.13    HTTPS    110B  TLS ClientHello SNI=video.lab
+# captura encerrada em 2026-11-16 09:49:25

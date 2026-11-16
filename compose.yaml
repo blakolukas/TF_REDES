@@ -1,0 +1,145 @@
+name: mitm-lab
+
+# Topologia do Trabalho Final (ARP Spoofing / MITM), 100% isolada e local.
+#
+#   rede_lab (172.10.20.0/24)                      rede_externa (172.10.30.0/24)
+#   +-----------+   +-----------+   +---------+    +-------------+
+#   |  vitima   |   | atacante  |   | gateway |====| servidores  |
+#   | .20.2     |   | .20.254   |   | .20.1   |    | .30.10      |
+#   +-----------+   +-----------+   | .30.1   |    | DNS/HTTP/   |
+#         rota default via gateway  +---------+    | HTTPS/DoH   |
+#                                                  +-------------+
+#
+# A vitima roteia pelo gateway; o atacante, na mesma rede_lab, envenena as caches
+# ARP de vitima e gateway para se colocar no caminho. Nenhuma interface toca a
+# rede real: tudo acontece nas duas bridges privadas abaixo.
+
+services:
+  atacante:
+    container_name: atacante
+    image: localhost/mitm-lab-atacante:latest
+    build:
+      context: .
+      dockerfile: containers/atacante/Containerfile
+    # privileged: o no atacante precisa escrever em /proc/sys em tempo de
+    # execucao -- ligar/desligar o ip_forward (Experimento 3) e os ICMP
+    # send_redirects. Sem isso o /proc/sys fica read-only no container.
+    privileged: true
+    cap_add:
+      - NET_ADMIN      # escrever ip_forward e manipular a interface
+      - NET_RAW        # abrir socket AF_PACKET (raw)
+    sysctls:
+      net.ipv4.ip_forward: "1"
+      net.ipv6.conf.all.disable_ipv6: "1"
+      net.ipv6.conf.default.disable_ipv6: "1"
+      net.ipv6.conf.lo.disable_ipv6: "1"
+    environment:
+      CAPTURE_IFACE: eth0
+    ports:
+      - "127.0.0.1:6080:6080"   # Wireshark no navegador
+    volumes:
+      - ./src:/lab/src:ro
+      - ./resultados:/lab/resultados:rw
+    extra_hosts:
+      - "vitima:172.10.20.2"
+      - "gateway:172.10.20.1"
+      - "atacante:172.10.20.254"
+      - "servidores:172.10.30.10"
+    networks:
+      rede_lab:
+        ipv4_address: 172.10.20.254
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -x Xvfb >/dev/null && pgrep -f websockify >/dev/null"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  vitima:
+    container_name: vitima
+    image: localhost/mitm-lab-vitima:latest
+    build:
+      context: .
+      dockerfile: containers/vitima/Containerfile
+    cap_add:
+      - NET_ADMIN      # ajustar rota default para o gateway
+    sysctls:
+      net.ipv6.conf.all.disable_ipv6: "1"
+      net.ipv6.conf.default.disable_ipv6: "1"
+      net.ipv6.conf.lo.disable_ipv6: "1"
+    depends_on:
+      - gateway
+      - servidores
+    extra_hosts:
+      - "vitima:172.10.20.2"
+      - "gateway:172.10.20.1"
+      - "atacante:172.10.20.254"
+      - "servidores:172.10.30.10"
+    networks:
+      rede_lab:
+        ipv4_address: 172.10.20.2
+
+  gateway:
+    container_name: gateway
+    image: localhost/mitm-lab-gateway:latest
+    build:
+      context: .
+      dockerfile: containers/gateway/Containerfile
+    cap_add:
+      - NET_ADMIN      # ip_forward + iptables
+      - NET_RAW
+    sysctls:
+      net.ipv4.ip_forward: "1"
+      net.ipv6.conf.all.disable_ipv6: "1"
+      net.ipv6.conf.default.disable_ipv6: "1"
+      net.ipv6.conf.lo.disable_ipv6: "1"
+    extra_hosts:
+      - "vitima:172.10.20.2"
+      - "gateway:172.10.20.1"
+      - "servidores:172.10.30.10"
+    networks:
+      rede_lab:
+        ipv4_address: 172.10.20.1
+      rede_externa:
+        ipv4_address: 172.10.30.1
+
+  servidores:
+    container_name: servidores
+    image: localhost/mitm-lab-servidores:latest
+    build:
+      context: .
+      dockerfile: containers/servidores/Containerfile
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      net.ipv6.conf.all.disable_ipv6: "1"
+      net.ipv6.conf.default.disable_ipv6: "1"
+      net.ipv6.conf.lo.disable_ipv6: "1"
+    extra_hosts:
+      - "gateway:172.10.30.1"
+      - "servidores:172.10.30.10"
+    networks:
+      rede_externa:
+        ipv4_address: 172.10.30.10
+
+networks:
+  rede_lab:
+    name: mitm_rede_lab
+    driver: bridge
+    enable_ipv6: false
+    driver_opts:
+      com.docker.network.driver.mtu: "1500"
+    ipam:
+      config:
+        - subnet: 172.10.20.0/24
+          gateway: 172.10.20.253
+
+  rede_externa:
+    name: mitm_rede_externa
+    driver: bridge
+    enable_ipv6: false
+    driver_opts:
+      com.docker.network.driver.mtu: "1500"
+    ipam:
+      config:
+        - subnet: 172.10.30.0/24
+          gateway: 172.10.30.253

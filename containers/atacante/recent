@@ -1,0 +1,4 @@
+# Pre-configura a janela principal do Wireshark para abrir MAXIMIZADA,
+# preenchendo todo o canvas do noVNC. Sem isto o Wireshark abre numa janela
+# pequena no centro de um desktop preto 1440x900 -- o que parece "tela preta".
+gui.geometry_main_maximized: TRUE

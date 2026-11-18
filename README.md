@@ -10,9 +10,11 @@ Toda a manipulação de pacotes é feita com **raw sockets** (`AF_PACKET`) e
 decodificação própria byte a byte — **sem** Scapy, arpspoof, ettercap ou
 libpcap/tcpdump, como exige o enunciado. Só usa a **biblioteca padrão do Python 3**.
 
-> ⚠️ **Ambiente 100% isolado.** Tudo roda em contêineres numa rede privada, sem
-> contato com redes reais. Rodar ARP Spoofing em rede de terceiros é crime
-> (Seção 10 do enunciado).
+> ⚠️ **ARP Spoofing 100% isolado.** O envenenamento acontece só na `rede_lab`
+> privada dos contêineres — nunca numa rede real (fazer isso em rede de terceiros
+> é crime, Seção 10 do enunciado). O lab roda offline por padrão; opcionalmente o
+> gateway pode encaminhar para a internet real (veja [Modos do gateway](#modos-do-gateway)),
+> sem jamais forjar nada fora da bridge privada.
 
 📖 Conceitos e arquitetura interna: [`docs/arquitetura.md`](docs/arquitetura.md) ·
 Experimentos e relatório: [`docs/relatorio.md`](docs/relatorio.md)
@@ -63,6 +65,17 @@ Use **2 terminais no Mac**, na raiz do projeto.
 ./scripts/lab.sh up
 ```
 
+Ele pergunta **com quem o gateway deve falar** (veja [Modos do gateway](#modos-do-gateway)):
+
+```
+Com quem o GATEWAY deve falar (para onde o trafego da vitima vai)?
+  [1] Servidores do lab   (autocontido / Cenario A: tudo .lab, sem internet)
+  [2] Internet real       (hibrido: *.lab continua local, o resto vai pra web)
+Escolha [1]:
+```
+
+Para pular a pergunta: `MODO_GATEWAY=internet ./scripts/lab.sh up`.
+
 Confira que subiram `vitima`, `atacante`, `gateway` e `servidores` (todos `Up`):
 
 ```bash
@@ -81,16 +94,58 @@ Já **dentro do contêiner**, inicia o ataque:
 python3 /lab/src/mitm.py --iface eth0 --vitima 172.10.20.2 --gateway 172.10.20.1
 ```
 
+Ele pergunta se deve **encaminhar os pacotes** (MITM transparente, padrão) ou não
+(blackhole do Experimento 3). Para não ser perguntado, passe `--forward` ou
+`--sem-forward`.
+
 **Terminal 1** — começa a captura da evidência:
 
 ```bash
 ./scripts/lab.sh capture start captura_auditoria.pcapng
 ```
 
-Gera o tráfego na vítima (veja o painel reagir no Terminal 2):
+Gera o tráfego na vítima (veja o painel reagir no Terminal 2). Escolha uma opção:
+
+**Tudo** — segue o modo (`servidor` → `.lab`, `internet` → sites reais):
 
 ```bash
 ./scripts/lab.sh trafego tudo
+```
+
+**Só os servidores `.lab`** (fictícios):
+
+```bash
+./scripts/lab.sh trafego lab
+```
+
+**Só sites reais** (requer modo `internet`):
+
+```bash
+./scripts/lab.sh trafego web
+```
+
+**HTTP em texto claro** — Experimento 1 (`site-http.lab`):
+
+```bash
+./scripts/lab.sh trafego http
+```
+
+**HTTPS / SNI** — Experimento 1 (`site-seguro.lab`):
+
+```bash
+./scripts/lab.sh trafego https
+```
+
+**DNS → SNI** — Experimento 2 (4 domínios `.lab`):
+
+```bash
+./scripts/lab.sh trafego dns
+```
+
+**DoH** — Experimento 2 (a consulta UDP/53 some, o SNI permanece):
+
+```bash
+./scripts/lab.sh trafego doh
 ```
 
 Fecha o `.pcapng` em `resultados/`:
@@ -132,8 +187,9 @@ atacante já capturando em `eth0` (filtro `ip or arp`). A evidência em `.pcapng
  │  vitima .20.2 ──rota default──┐    │          │                            │
  │                               ▼    │          │                            │
  │  atacante .20.254 ◄══ARP══► gateway .20.1 / .30.1 ──NAT──► servidores .30.10│
- │     (mitm.py)                      │          │   DNS · HTTP · HTTPS · DoH  │
- └───────────────────────────────────┘          └────────────────────────────┘
+ │     (mitm.py)                 │    │          │   DNS · HTTP · HTTPS · DoH  │
+ └──────────────────────────────┼────┘          └────────────────────────────┘
+                                 └── NAT (só no modo internet) ──►  🌐 Internet real
 ```
 
 | Papel | Contêiner | IP | Programa |
@@ -147,7 +203,31 @@ A vítima roteia pelo gateway; o atacante, na mesma `rede_lab`, envenena as cach
 ARP da vítima e do gateway para entrar no caminho em nível 2 e enxergar todo o
 tráfego dela. Os servidores ficam **depois** do gateway de propósito — é o que dá
 sentido ao Experimento 3 (sem encaminhamento, o tráfego da vítima não chega lá).
-Todos os domínios `.lab` resolvem para `172.10.30.10`, diferenciados pelo Host/SNI.
+No modo **servidor** todos os domínios resolvem para `172.10.30.10` (diferenciados
+pelo Host/SNI); no modo **internet** só os `*.lab` ficam nesse IP e o resto vai
+para a web real (veja [Modos do gateway](#modos-do-gateway)).
+
+---
+
+## Modos do gateway
+
+Ao subir (`./scripts/lab.sh up`), você escolhe **para onde o gateway encaminha o
+tráfego da vítima**. Isso casa com a própria topologia do enunciado (§2.1): o
+gateway encaminha "para a Internet **ou para o restante da rede**".
+
+| Modo | DNS | Para onde vai o tráfego | Quando usar |
+|---|---|---|---|
+| **servidor** (padrão) | tudo → `172.10.30.10` | só os servidores `.lab` do lab | Cenário A autocontido. Determinístico e offline — ideal para a **demo ao vivo** e para o **Experimento 1** (HTTP em claro só existe no `site-http.lab`). |
+| **internet** (híbrido) | `*.lab` → `172.10.30.10`; resto → `1.1.1.1` | `.lab` local **+** sites reais na web | **Experimento 2** com sites de verdade (`trafego tudo` → só web nesse modo): DNS→IP→SNI reais. O `site-http.lab` continua resolvendo p/ o Experimento 1 (`trafego http`). |
+
+O modo **internet** mantém o `site-http.lab` local (o único HTTP em texto claro,
+porque na web real quase tudo é HTTPS) e ainda deixa a vítima navegar em sites
+reais. A escolha "ou um ou outro" seria pior: perderia o Experimento 1.
+
+> ⚠️ **O ARP Spoofing continua 100% dentro da `rede_lab` privada** nos dois modos
+> — o atacante nunca forja nada na rede real. No modo internet, só o gateway/os
+> servidores fazem conexões de saída normais (como qualquer contêiner). A proibição
+> do enunciado (Seção 10) é sobre *spoofar redes de terceiros*, o que não acontece aqui.
 
 ---
 
@@ -174,10 +254,18 @@ que apresentar: [`docs/relatorio.md`](docs/relatorio.md).
 |---|---|---|
 | 1 | `trafego http` e `trafego https` | HTTP expõe tudo (método, URI, cookies); HTTPS só o SNI |
 | 2 | `trafego dns` e depois `trafego doh` | correlação DNS→SNI; com DoH a consulta UDP/53 some, mas o SNI continua exposto |
-| 3 | no atacante: `echo 0 > /proc/sys/net/ipv4/ip_forward` | a espionagem vira blackhole (a vítima perde conexão) |
+| 3 | no atacante: responda **n** à pergunta do `mitm.py` (ou `echo 0 > /proc/sys/net/ipv4/ip_forward`) | a espionagem vira blackhole (a vítima perde conexão) |
 
-No Experimento 3, reative com `echo 1 > /proc/sys/net/ipv4/ip_forward` (ou suba o
-`mitm.py` já com `--sem-forward`).
+O `trafego tudo` **segue o modo** e nunca mistura os dois mundos: em **servidor**
+gera só os `.lab`; em **internet** gera só sites reais (google, wikipedia, github,
+cloudflare) — DNS, IP e SNI de verdade para o Experimento 2. Alvos explícitos:
+`trafego lab` (só `.lab`) e `trafego web` (só web). Para o **Experimento 1 em modo
+internet**, use `trafego http` — o `site-http.lab` continua resolvendo localmente
+(HTTP em claro só existe no lab; na web real quase tudo é HTTPS).
+
+O Experimento 3 agora pode ser escolhido já na partida: o `mitm.py` **pergunta** se
+deve encaminhar (responda **n** para o blackhole), ou passe `--sem-forward`. Para
+ligar/desligar com o ataque já rodando, use `echo 0`/`echo 1 > /proc/sys/net/ipv4/ip_forward`.
 
 ---
 
@@ -206,6 +294,8 @@ Valida os parsers (Ethernet/ARP/IPv4/UDP/TCP/DNS/HTTP/SNI) e gera exemplos em
 | `No such file or directory` ao rodar `./scripts/lab.sh ...` | Você está **dentro do contêiner**. | Rode `lab.sh` num terminal **do Mac**, na raiz do projeto. |
 | Wireshark (`127.0.0.1:6080`) abre **preto / vazio** | Imagem do atacante **antiga** (antes da correção de renderização Qt sobre VNC). | `./scripts/lab.sh down && ./scripts/lab.sh up` para **reconstruir** a imagem. Depois recarregue a aba (F5). |
 | Aba preta **mesmo após reconstruir** | Wireshark não subiu. | `podman logs atacante \| grep start-wireshark` mostra o motivo (ex.: interface ausente). O `.pcapng` segue sendo gravado pelo `capture start`, independente da GUI. |
+| No **modo internet**, `ping google.com` na vítima falha mas `curl` funciona | No macOS o Podman (gvproxy) encaminha só **TCP/UDP**, não ICMP. | Normal — todos os experimentos usam `curl` (TCP) e DNS (UDP). Não use `ping` para testar a internet. |
+| No **modo internet** a vítima não abre sites reais (`curl` trava/timeout) | VM do Podman sem internet, ou subiu em modo `servidor`. | Confira `podman logs gateway \| grep modo` (tem que dizer `internet`) e a internet da VM: `podman machine ssh ping -c1 1.1.1.1`. |
 
 Diagnóstico rápido (dentro do atacante): `ping -c2 172.10.20.1` tem que responder
 — se responder, a varredura ARP acha os alvos.
@@ -225,8 +315,8 @@ Diagnóstico rápido (dentro do atacante): `ping -c2 172.10.20.1` tem que respon
 TF_Lab_Redes/
 ├── compose.yaml                 4 contêineres (vitima, atacante, gateway, servidores), 2 redes
 ├── scripts/
-│   ├── lab.sh                   orquestra o lab (up/down/shell/capture/trafego)
-│   ├── gerar-trafego.sh         tráfego da vítima (http/https/dns/doh)
+│   ├── lab.sh                   orquestra o lab (up [servidor/internet]/down/shell/capture/trafego)
+│   ├── gerar-trafego.sh         tráfego da vítima (tudo/lab/web/http/https/dns/doh)
 │   └── autoteste.py             testes offline dos decoders + pipeline
 ├── containers/                  imagens: atacante (Wireshark/noVNC), vitima, gateway, servidores
 ├── src/

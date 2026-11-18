@@ -17,17 +17,21 @@ usage() {
 Uso: ./scripts/lab.sh COMANDO [argumentos]
 
   build                         Constroi as 4 imagens
-  up                            Sobe vitima, atacante, gateway e servidores
+  up                            Sobe o lab; pergunta se o gateway fala com os
+                                servidores do lab (autocontido) ou com a internet
   down                          Encerra o laboratorio e remove as redes
   status                        Mostra os containers e a captura
   shell NOME                    Abre terminal em vitima|atacante|gateway|servidores
-  trafego [tudo|http|https|dns|doh]
-                                Gera trafego na vitima (atalho p/ gerar-trafego)
+  trafego [tudo|lab|web|http|https|dns|doh]
+                                Gera trafego na vitima (atalho p/ gerar-trafego).
+                                'tudo' segue o modo: servidor=>.lab, internet=>web.
+                                'lab' = so .lab ; 'web' = so sites reais.
   capture start [arq.pcapng]|stop|status
                                 Controla a captura de evidencia (dumpcap no atacante)
 
 Exemplos:
-  ./scripts/lab.sh up
+  ./scripts/lab.sh up                    # pergunta: servidores do lab ou internet
+  MODO_GATEWAY=internet ./scripts/lab.sh up   # sobe direto no modo internet
   ./scripts/lab.sh shell atacante        # e la: python3 /lab/src/mitm.py --iface eth0
   ./scripts/lab.sh capture start captura_auditoria.pcapng
   ./scripts/lab.sh trafego tudo
@@ -35,6 +39,32 @@ EOF
 }
 
 compose() { "${COMPOSE[@]}" "$@"; }
+
+# Pergunta com quem o GATEWAY deve falar (upstream da rede). Escreve o MENU no
+# stderr e devolve SO o valor escolhido no stdout, para poder ser capturado por
+# $(...). Respeita MODO_GATEWAY ja definido no ambiente e cai em 'servidor'
+# quando nao ha terminal (execucao nao interativa).
+escolher_modo_gateway() {
+  if [[ -n "${MODO_GATEWAY:-}" ]]; then
+    printf '%s' "$MODO_GATEWAY"; return
+  fi
+  if [[ ! -t 0 ]]; then
+    printf 'servidor'; return
+  fi
+  {
+    echo
+    echo "Com quem o GATEWAY deve falar (para onde o trafego da vitima vai)?"
+    echo "  [1] Servidores do lab   (autocontido / Cenario A: tudo .lab, sem internet)"
+    echo "  [2] Internet real       (hibrido: *.lab continua local, o resto vai pra web)"
+  } >&2
+  printf 'Escolha [1]: ' >&2
+  local escolha
+  read -r escolha || escolha=1
+  case "$escolha" in
+    2|internet|Internet|INTERNET) printf 'internet' ;;
+    *) printf 'servidor' ;;
+  esac
+}
 
 # No macOS/Windows o Podman roda numa VM Linux que precisa estar ligada. Um
 # reinicio da maquina a desliga; este check troca o erro cru do Podman por uma
@@ -74,9 +104,12 @@ case "$comando" in
     ;;
   up)
     check_podman
+    MODO_GATEWAY=$(escolher_modo_gateway)
+    export MODO_GATEWAY
+    echo "[lab] gateway -> ${MODO_GATEWAY} (ex.: MODO_GATEWAY=internet ./scripts/lab.sh up pula a pergunta)"
     compose up -d --build
     echo
-    echo "Ambiente no ar. Wireshark do atacante em http://127.0.0.1:6080/"
+    echo "Ambiente no ar (gateway em modo '${MODO_GATEWAY}'). Wireshark do atacante em http://127.0.0.1:6080/"
     echo "Proximo passo: ./scripts/lab.sh shell atacante"
     ;;
   down)

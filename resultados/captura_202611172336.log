@@ -1,0 +1,67 @@
+# captura iniciada em 2026-11-17 23:36:43
+2026-11-17 23:36:57     172.10.20.2 -> 172.10.30.10    DNS       61B  DNS consulta A site-seguro.lab
+2026-11-17 23:36:57     172.10.20.2 -> 172.10.30.10    DNS       61B  DNS consulta AAAA site-seguro.lab
+2026-11-17 23:36:57    172.10.30.10 -> 172.10.20.2     DNS       77B  DNS resposta site-seguro.lab -> 172.10.30.10
+2026-11-17 23:36:57    172.10.30.10 -> 172.10.20.2     DNS      136B  DNS resposta site-seguro.lab -> (sem A)
+2026-11-17 23:36:57     172.10.20.2 -> 172.10.30.10    HTTPS    569B  TLS ClientHello SNI=site-seguro.lab
+2026-11-17 23:36:58     172.10.20.2 -> 172.10.30.10    DNS       54B  DNS consulta A loja.lab
+2026-11-17 23:36:58     172.10.20.2 -> 172.10.30.10    DNS       54B  DNS consulta AAAA loja.lab
+2026-11-17 23:36:58    172.10.30.10 -> 172.10.20.2     DNS       70B  DNS resposta loja.lab -> 172.10.30.10
+2026-11-17 23:36:58    172.10.30.10 -> 172.10.20.2     DNS      129B  DNS resposta loja.lab -> (sem A)
+2026-11-17 23:36:58     172.10.20.2 -> 172.10.30.10    HTTPS    569B  TLS ClientHello SNI=loja.lab
+2026-11-17 23:36:59     172.10.20.2 -> 172.10.30.10    DNS       55B  DNS consulta A banco.lab
+2026-11-17 23:36:59     172.10.20.2 -> 172.10.30.10    DNS       55B  DNS consulta AAAA banco.lab
+2026-11-17 23:36:59    172.10.30.10 -> 172.10.20.2     DNS       71B  DNS resposta banco.lab -> 172.10.30.10
+2026-11-17 23:36:59    172.10.30.10 -> 172.10.20.2     DNS      130B  DNS resposta banco.lab -> (sem A)
+2026-11-17 23:37:00     172.10.20.2 -> 172.10.30.10    HTTPS    569B  TLS ClientHello SNI=banco.lab
+2026-11-17 23:37:01     172.10.20.2 -> 172.10.30.10    DNS       58B  DNS consulta A noticias.lab
+2026-11-17 23:37:01     172.10.20.2 -> 172.10.30.10    DNS       58B  DNS consulta AAAA noticias.lab
+2026-11-17 23:37:01    172.10.30.10 -> 172.10.20.2     DNS       74B  DNS resposta noticias.lab -> 172.10.30.10
+2026-11-17 23:37:01    172.10.30.10 -> 172.10.20.2     DNS      133B  DNS resposta noticias.lab -> (sem A)
+2026-11-17 23:37:01     172.10.20.2 -> 172.10.30.10    HTTPS    569B  TLS ClientHello SNI=noticias.lab
+2026-11-17 23:37:02     172.10.20.2 -> 172.10.30.10    DNS       55B  DNS consulta A video.lab
+2026-11-17 23:37:02     172.10.20.2 -> 172.10.30.10    DNS       55B  DNS consulta AAAA video.lab
+2026-11-17 23:37:02    172.10.30.10 -> 172.10.20.2     DNS       71B  DNS resposta video.lab -> 172.10.30.10
+2026-11-17 23:37:02    172.10.30.10 -> 172.10.20.2     DNS      130B  DNS resposta video.lab -> (sem A)
+2026-11-17 23:37:02     172.10.20.2 -> 172.10.30.10    HTTPS    569B  TLS ClientHello SNI=video.lab
+2026-11-17 23:37:03     172.10.20.2 -> 172.10.30.10    HTTPS    569B  TLS ClientHello SNI=loja.lab
+2026-11-17 23:37:04     172.10.20.2 -> 172.10.30.10    DNS       56B  DNS consulta A google.com
+2026-11-17 23:37:04     172.10.20.2 -> 172.10.30.10    DNS       56B  DNS consulta AAAA google.com
+2026-11-17 23:37:04    172.10.30.10 -> 172.10.20.2     DNS      168B  DNS resposta google.com -> (sem A)
+2026-11-17 23:37:04    172.10.30.10 -> 172.10.20.2     DNS      152B  DNS resposta google.com -> 142.251.0.138, 142.251.0.100, 142.251.0.139, 142.251.0.102, 142.251.0.113, 142.251.0.101
+2026-11-17 23:37:04     172.10.20.2 -> 142.251.0.138   HTTPS    569B  TLS ClientHello SNI=google.com
+2026-11-17 23:37:05     172.10.20.2 -> 172.10.30.10    DNS       59B  DNS consulta A wikipedia.org
+2026-11-17 23:37:05     172.10.20.2 -> 172.10.30.10    DNS       59B  DNS consulta AAAA wikipedia.org
+2026-11-17 23:37:05    172.10.30.10 -> 172.10.20.2     DNS       75B  DNS resposta wikipedia.org -> 195.200.68.224
+2026-11-17 23:37:05    172.10.30.10 -> 172.10.20.2     DNS       87B  DNS resposta wikipedia.org -> (sem A)
+2026-11-17 23:37:05     172.10.20.2 -> 195.200.68.224  HTTPS    569B  TLS ClientHello SNI=wikipedia.org
+2026-11-17 23:37:06     172.10.20.2 -> 172.10.30.10    DNS       56B  DNS consulta A github.com
+2026-11-17 23:37:06     172.10.20.2 -> 172.10.30.10    DNS       56B  DNS consulta AAAA github.com
+2026-11-17 23:37:06    172.10.30.10 -> 172.10.20.2     DNS      121B  DNS resposta github.com -> (sem A)
+2026-11-17 23:37:06    172.10.30.10 -> 172.10.20.2     DNS       72B  DNS resposta github.com -> 4.228.31.150
+2026-11-17 23:37:07     172.10.20.2 -> 4.228.31.150    HTTPS    569B  TLS ClientHello SNI=github.com
+2026-11-17 23:37:08     172.10.20.2 -> 172.10.30.10    DNS       60B  DNS consulta A cloudflare.com
+2026-11-17 23:37:08     172.10.20.2 -> 172.10.30.10    DNS       60B  DNS consulta AAAA cloudflare.com
+2026-11-17 23:37:08    172.10.30.10 -> 172.10.20.2     DNS      116B  DNS resposta cloudflare.com -> (sem A)
+2026-11-17 23:37:08    172.10.30.10 -> 172.10.20.2     DNS       92B  DNS resposta cloudflare.com -> 104.16.132.229, 104.16.133.229
+2026-11-17 23:37:10     172.10.20.2 -> 104.16.133.229  HTTPS    569B  TLS ClientHello SNI=cloudflare.com
+2026-11-17 23:39:49     172.10.20.2 -> 172.10.30.10    DNS       56B  DNS consulta A google.com
+2026-11-17 23:39:49     172.10.20.2 -> 172.10.30.10    DNS       56B  DNS consulta AAAA google.com
+2026-11-17 23:39:49    172.10.30.10 -> 172.10.20.2     DNS      152B  DNS resposta google.com -> 142.251.0.138, 142.251.0.100, 142.251.0.139, 142.251.0.102, 142.251.0.113, 142.251.0.101
+2026-11-17 23:39:49    172.10.30.10 -> 172.10.20.2     DNS      168B  DNS resposta google.com -> (sem A)
+2026-11-17 23:39:49     172.10.20.2 -> 142.251.0.138   HTTPS    569B  TLS ClientHello SNI=google.com
+2026-11-17 23:39:51     172.10.20.2 -> 172.10.30.10    DNS       59B  DNS consulta A wikipedia.org
+2026-11-17 23:39:51     172.10.20.2 -> 172.10.30.10    DNS       59B  DNS consulta AAAA wikipedia.org
+2026-11-17 23:39:51    172.10.30.10 -> 172.10.20.2     DNS       87B  DNS resposta wikipedia.org -> (sem A)
+2026-11-17 23:39:51    172.10.30.10 -> 172.10.20.2     DNS       75B  DNS resposta wikipedia.org -> 195.200.68.224
+2026-11-17 23:39:51     172.10.20.2 -> 195.200.68.224  HTTPS    569B  TLS ClientHello SNI=wikipedia.org
+2026-11-17 23:39:52     172.10.20.2 -> 172.10.30.10    DNS       56B  DNS consulta A github.com
+2026-11-17 23:39:52     172.10.20.2 -> 172.10.30.10    DNS       56B  DNS consulta AAAA github.com
+2026-11-17 23:39:52    172.10.30.10 -> 172.10.20.2     DNS      140B  DNS resposta github.com -> (sem A)
+2026-11-17 23:39:52    172.10.30.10 -> 172.10.20.2     DNS       72B  DNS resposta github.com -> 4.228.31.150
+2026-11-17 23:39:52     172.10.20.2 -> 4.228.31.150    HTTPS    569B  TLS ClientHello SNI=github.com
+2026-11-17 23:39:53     172.10.20.2 -> 172.10.30.10    DNS       60B  DNS consulta A cloudflare.com
+2026-11-17 23:39:53     172.10.20.2 -> 172.10.30.10    DNS       60B  DNS consulta AAAA cloudflare.com
+2026-11-17 23:39:53    172.10.30.10 -> 172.10.20.2     DNS       92B  DNS resposta cloudflare.com -> 104.16.132.229, 104.16.133.229
+2026-11-17 23:39:53    172.10.30.10 -> 172.10.20.2     DNS      116B  DNS resposta cloudflare.com -> (sem A)
+2026-11-17 23:39:56     172.10.20.2 -> 104.16.133.229  HTTPS    569B  TLS ClientHello SNI=cloudflare.com

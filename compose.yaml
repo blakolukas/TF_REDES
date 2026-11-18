@@ -35,6 +35,9 @@ services:
       net.ipv6.conf.lo.disable_ipv6: "1"
     environment:
       CAPTURE_IFACE: eth0
+      # No modo internet o atacante encaminha o trafego externo PELO gateway do
+      # lab (e nao direto pela ponte do Podman), para capturar os dois sentidos.
+      MODO_GATEWAY: ${MODO_GATEWAY:-servidor}
     ports:
       - "127.0.0.1:6080:6080"   # Wireshark no navegador
     volumes:
@@ -69,6 +72,8 @@ services:
     depends_on:
       - gateway
       - servidores
+    environment:
+      MODO_GATEWAY: ${MODO_GATEWAY:-servidor}
     extra_hosts:
       - "vitima:172.10.20.2"
       - "gateway:172.10.20.1"
@@ -89,9 +94,17 @@ services:
       - NET_RAW
     sysctls:
       net.ipv4.ip_forward: "1"
+      # No modo internet o gateway pode reencaminhar trafego de volta pela mesma
+      # interface (lado da vitima). Sem isto, ele mandaria um ICMP redirect e a
+      # vitima passaria a ir direto na ponte do Podman, desfazendo o MITM.
+      net.ipv4.conf.all.send_redirects: "0"
+      net.ipv4.conf.default.send_redirects: "0"
       net.ipv6.conf.all.disable_ipv6: "1"
       net.ipv6.conf.default.disable_ipv6: "1"
       net.ipv6.conf.lo.disable_ipv6: "1"
+    environment:
+      # 'servidor' (autocontido) ou 'internet' (hibrido). Definido por lab.sh up.
+      MODO_GATEWAY: ${MODO_GATEWAY:-servidor}
     extra_hosts:
       - "vitima:172.10.20.2"
       - "gateway:172.10.20.1"
@@ -114,6 +127,9 @@ services:
       net.ipv6.conf.all.disable_ipv6: "1"
       net.ipv6.conf.default.disable_ipv6: "1"
       net.ipv6.conf.lo.disable_ipv6: "1"
+    environment:
+      # No modo internet o dnsmasq resolve *.lab localmente e encaminha o resto.
+      MODO_GATEWAY: ${MODO_GATEWAY:-servidor}
     extra_hosts:
       - "gateway:172.10.30.1"
       - "servidores:172.10.30.10"

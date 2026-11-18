@@ -1,0 +1,11 @@
+dominio,ip_destino,protocolos,total_bytes
+github.com,172.10.30.10;4.228.31.150,DNS;HTTPS,1076140
+video.lab,172.10.30.10,DNS;HTTPS,23477
+wikipedia.org,172.10.30.10;195.200.68.224,DNS;HTTPS,16541
+loja.lab,172.10.30.10,DNS;HTTPS,14905
+cloudflare.com,104.16.132.229;104.16.133.229;172.10.30.10,DNS;HTTPS,13985
+google.com,172.10.30.10;172.217.29.142,DNS;HTTPS,13383
+noticias.lab,172.10.30.10,DNS;HTTPS,13242
+banco.lab,172.10.30.10,DNS;HTTPS,13115
+site-seguro.lab,172.10.30.10,DNS;HTTPS,8810
+site-http.lab,172.10.30.10,DNS;HTTP,4136

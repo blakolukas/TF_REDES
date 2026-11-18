@@ -17,15 +17,31 @@ if [ ! -f "$CERT_DIR/cert.pem" ]; then
   echo "[servidores] certificado *.lab gerado em $CERT_DIR"
 fi
 
-# 2) DNS: qualquer dominio resolve para este host (determinismo total no lab).
-cat > /etc/dnsmasq.conf <<EOF
+# 2) DNS: depende do modo escolhido no `lab.sh up`.
+#    - servidor (autocontido): QUALQUER dominio resolve para este host.
+#    - internet (hibrido): so *.lab resolve aqui; o resto e encaminhado a um
+#      resolvedor real (este container alcanca 1.1.1.1 pela rota default do Podman).
+MODO="${MODO_GATEWAY:-servidor}"
+if [ "$MODO" = "internet" ]; then
+  cat > /etc/dnsmasq.conf <<EOF
+no-resolv
+no-hosts
+log-queries
+address=/lab/${MEU_IP}
+server=1.1.1.1
+server=8.8.8.8
+EOF
+  echo "[servidores] dnsmasq no ar (modo internet): *.lab -> ${MEU_IP}, resto -> 1.1.1.1/8.8.8.8"
+else
+  cat > /etc/dnsmasq.conf <<EOF
 no-resolv
 no-hosts
 log-queries
 address=/#/${MEU_IP}
 EOF
+  echo "[servidores] dnsmasq no ar (modo servidor): qualquer dominio -> ${MEU_IP}"
+fi
 dnsmasq --keep-in-foreground &
-echo "[servidores] dnsmasq no ar (UDP/53): *.lab -> ${MEU_IP}"
 
 # 3) HTTP (80), HTTPS (443) e DoH (8443) num unico processo Python (stdlib).
 echo "[servidores] subindo HTTP/HTTPS/DoH..."

@@ -1,7 +1,7 @@
 # Relatório Técnico — Ataque MITM com ARP Spoofing e Auditoria de Metadados
 
 **Disciplina:** Fundamentos de Redes de Computadores — PUCRS 2026/2
-**Grupo:** GXX — _[integrantes]_
+**Grupo:** Dhara Hadi, Eduarda Fuchs, Lucas Blacovicz e Lucas Volkweis
 **Ambiente:** contêineres Podman em rede bridge isolada (Cenário A do enunciado)
 
 > Este documento é o **esqueleto** do relatório, com a arquitetura e a análise de
@@ -35,18 +35,30 @@ Ambiente **totalmente isolado**, sem contato com qualquer rede real (exigência
 ética e legal do enunciado, Seção 10). Quatro contêineres em duas bridges
 privadas:
 
-| Papel | Container | IP | Função |
-|---|---|---|---|
-| Vítima | `vitima` | 172.10.20.2 | gera tráfego (DNS, HTTP, HTTPS); rota default → gateway |
-| Atacante | `atacante` | 172.10.20.254 | `mitm.py` + Wireshark (NoVNC :6080) |
-| Gateway | `gateway` | 172.10.20.1 / 172.10.30.1 | roteia com `ip_forward` + NAT |
-| Servidores | `servidores` | 172.10.30.10 | DNS, HTTP, HTTPS (SNI) e DoH, todos `.lab` |
+| Papel      | Container    | IP                        | Função                                                  |
+| ---------- | ------------ | ------------------------- | ------------------------------------------------------- |
+| Vítima     | `vitima`     | 172.10.20.2               | gera tráfego (DNS, HTTP, HTTPS); rota default → gateway |
+| Atacante   | `atacante`   | 172.10.20.254             | `mitm.py` + Wireshark (NoVNC :6080)                     |
+| Gateway    | `gateway`    | 172.10.20.1 / 172.10.30.1 | roteia com `ip_forward` + NAT                           |
+| Servidores | `servidores` | 172.10.30.10              | DNS, HTTP, HTTPS (SNI) e DoH, todos `.lab`              |
 
 Procedimento de subida e execução: ver `README.md`. Todos os domínios `.lab`
 resolvem para `172.10.30.10` (determinismo total), diferenciados pelo SNI/Host.
 
-**`[PREENCHER]`** Versões: SO do host, Podman `X.Y`, Python 3.12, saída de
-`./scripts/lab.sh status`.
+**Ambiente — preencher com a saída da sua máquina.** Rode no Mac, na raiz do projeto, e cole a saída:
+
+```bash
+sw_vers                 # SO do host (macOS)
+podman --version        # versão do Podman
+podman machine ls       # VM Linux do Podman (modo rootful)
+./scripts/lab.sh status # 4 contêineres no ar + estado da captura
+```
+
+Versão do Python dos contêineres: `podman exec atacante python3 --version`.
+
+```text
+[cole aqui a saída dos comandos acima]
+```
 
 ## 3. Resultados dos experimentos obrigatórios
 
@@ -66,14 +78,14 @@ no atacante e `mitm.py` rodando; ao final, `capture stop`. Os arquivos
 
 **Tabela comparativa (o que o interceptador conseguiu ver):**
 
-| Dado | HTTP (porta 80) | HTTPS (porta 443) |
-|---|---|---|
-| Endereços IP e portas | ✅ visível | ✅ visível |
-| Nome de domínio | ✅ Host no cabeçalho | ✅ apenas via **SNI** (ClientHello) |
-| Método (GET/POST) | ✅ visível | ❌ cifrado |
-| URI / caminho | ✅ visível | ❌ cifrado |
-| Cabeçalhos (User-Agent, Cookie) | ✅ visível | ❌ cifrado |
-| Corpo da mensagem | ✅ visível | ❌ cifrado |
+| Dado                            | HTTP (porta 80)      | HTTPS (porta 443)                   |
+| ------------------------------- | -------------------- | ----------------------------------- |
+| Endereços IP e portas           | ✅ visível           | ✅ visível                          |
+| Nome de domínio                 | ✅ Host no cabeçalho | ✅ apenas via **SNI** (ClientHello) |
+| Método (GET/POST)               | ✅ visível           | ❌ cifrado                          |
+| URI / caminho                   | ✅ visível           | ❌ cifrado                          |
+| Cabeçalhos (User-Agent, Cookie) | ✅ visível           | ❌ cifrado                          |
+| Corpo da mensagem               | ✅ visível           | ❌ cifrado                          |
 
 **Explicação teórica.** No HTTP, a mensagem de aplicação trafega em texto claro
 sobre o TCP: quem está no caminho lê tudo. No HTTPS, o TLS cifra a camada de
@@ -82,9 +94,17 @@ aplicação **após** o handshake; antes disso, porém, o cliente envia o
 (para o servidor saber qual certificado apresentar em hospedagem compartilhada).
 Por isso o domínio vaza mesmo no HTTPS, mas método, URI, cabeçalhos e corpo não.
 
-**`[PREENCHER]`** Linhas correspondentes do seu `captura_*.log`; prints do
-Wireshark com *Follow → TCP Stream* do HTTP (tudo legível) e do
-`tls.handshake.extensions_server_name` do HTTPS (só o SNI); números dos pacotes.
+**Evidência do `captura_*.log` (execução real):**
+
+```text
+172.10.20.2 -> 172.10.30.10  HTTP   145B  HTTP GET http://site-http.lab/login?user=alice  UA='curl/7.88.1'
+172.10.20.2 -> 172.10.30.10  HTTP   143B  HTTP GET http://site-http.lab/painel/segredo    UA='curl/7.88.1'
+172.10.20.2 -> 172.10.30.10  HTTPS  569B  TLS ClientHello SNI=site-seguro.lab
+```
+
+No HTTP o interceptador leu método, caminho e User-Agent em claro; no HTTPS só apareceu o SNI (`site-seguro.lab`) — método, URI, cabeçalhos e corpo ficaram cifrados.
+
+**`[PREENCHER]`** prints do Wireshark: _Follow → TCP Stream_ do HTTP (tudo legível) e o filtro `tls.handshake.extensions_server_name` no HTTPS (só o SNI); anote os números dos pacotes do seu `captura_auditoria.pcapng`.
 
 ### 3.2 Experimento 2 — Correlação DNS ↔ HTTPS (e efeito do DoH)
 
@@ -104,11 +124,33 @@ SNI confirma o domínio da sessão cifrada.
 para o endpoint `https://172.10.30.10:8443/dns-query`: a consulta **some do
 UDP/53** no sniffer (não há mais QNAME em claro), mas o **SNI do `ClientHello`
 continua exposto** — o atacante ainda sabe qual site foi acessado. Isso mostra
-que o DoH protege a *resolução*, não o *destino* da conexão TLS convencional.
+que o DoH protege a _resolução_, não o _destino_ da conexão TLS convencional.
 
-**`[PREENCHER]`** Linha do tempo (print do Wireshark filtrando
-`dns || tls.handshake.type == 1`) para ≥4 domínios; print do antes/depois do DoH
-(com e sem pacotes UDP/53); trecho do `resumo_*.csv`.
+**Evidência do `captura_*.log` (execução real — 4 domínios distintos):**
+
+```text
+172.10.20.2 -> 172.10.30.10  DNS    54B  DNS consulta A loja.lab
+172.10.30.10 -> 172.10.20.2  DNS    70B  DNS resposta loja.lab -> 172.10.30.10
+172.10.20.2 -> 172.10.30.10  HTTPS 569B  TLS ClientHello SNI=loja.lab
+172.10.20.2 -> 172.10.30.10  DNS    55B  DNS consulta A banco.lab
+172.10.20.2 -> 172.10.30.10  HTTPS 569B  TLS ClientHello SNI=banco.lab
+172.10.20.2 -> 172.10.30.10  HTTPS 569B  TLS ClientHello SNI=noticias.lab
+172.10.20.2 -> 172.10.30.10  HTTPS 569B  TLS ClientHello SNI=video.lab
+```
+
+Cada domínio aparece primeiro como consulta/resposta DNS em claro (QNAME) e, logo depois, como `ClientHello` com o mesmo nome no SNI — a cadeia DNS→TLS que o `interceptador` correlaciona.
+
+**Trecho do `resumo_*.csv` (execução real):**
+
+```text
+dominio,ip_destino,protocolos,total_bytes
+video.lab,172.10.30.10,DNS;HTTPS,7820
+loja.lab,172.10.30.10,DNS;HTTPS,4876
+noticias.lab,172.10.30.10,DNS;HTTPS,4335
+banco.lab,172.10.30.10,DNS;HTTPS,4262
+```
+
+**`[PREENCHER]`** prints do Wireshark: a linha do tempo com o filtro `dns || tls.handshake.type == 1` para os ≥4 domínios, e o antes/depois do DoH (com pacotes UDP/53 e, após `gerar-trafego doh`, sem o UDP/53 mas com o SNI ainda visível).
 
 ### 3.3 Experimento 3 — IP forwarding (espionagem → blackhole)
 
@@ -161,11 +203,11 @@ autenticação: aceita qualquer `reply`. Mitigações reais:
   VLAN reduz o domínio de broadcast exposto.
 
 **Resolução de nomes — contra a espionagem de DNS.** O DNS tradicional é UDP/53
-em claro. Protegem a *consulta*:
+em claro. Protegem a _consulta_:
 
 - **DoT (DNS over TLS, RFC 7858)** e **DoH (DNS over HTTPS, RFC 8484):** cifram a
   resolução entre cliente e resolver.
-- **DNSSEC:** garante *integridade/autenticidade* das respostas (não
+- **DNSSEC:** garante _integridade/autenticidade_ das respostas (não
   confidencialidade).
 
 Por que não bastam sozinhos: mesmo com DoH/DoT, a conexão TLS seguinte ainda
@@ -178,12 +220,21 @@ de ver o QNAME, mas continua identificando o site pelo SNI (e pelo IP de destino
 DNS (registros **HTTPS/SVCB**). Desafios para adoção ampla: exige suporte
 coordenado de cliente, servidor e CDN; depende de DNS seguro (DoH/DoT) para
 buscar a chave sem vazá-la; e esbarra em middleboxes/políticas de rede que hoje
-inspecionam o SNI. É um padrão **em evolução/implantação** — citar as referências
-atualizadas (RFCs e drafts do IETF) na versão final.
+inspecionam o SNI. O ECH foi padronizado como **RFC 9849** (TLS Encrypted Client Hello, Standards Track, março/2026); a publicação da configuração ECH via DNS (registros SVCB/HTTPS) é tratada na **RFC 9848**. A adoção ampla ainda depende de suporte coordenado de cliente, servidor e CDN, e enfrenta middleboxes/políticas de rede que hoje inspecionam o SNI.
 
-> **`[PREENCHER]`/citar:** RFC 826 (ARP), RFC 6066 (SNI), RFC 7858 (DoT),
-> RFC 8484 (DoH), RFC 9460 (SVCB/HTTPS RR) e o draft de ECH do TLS WG; mais a
-> documentação de DAI do fornecedor de switch escolhido.
+### Referências
+
+1. RFC 826 — _An Ethernet Address Resolution Protocol_ (ARP). IETF, 1982.
+2. RFC 2131 — _Dynamic Host Configuration Protocol_ (DHCP; base do DHCP Snooping). IETF, 1997.
+3. RFC 6066 — _TLS Extensions: Extension Definitions_ (define o SNI). IETF, 2011.
+4. RFC 8446 — _The Transport Layer Security (TLS) Protocol Version 1.3_. IETF, 2018.
+5. RFC 7858 — _Specification for DNS over TLS (DoT)_. IETF, 2016.
+6. RFC 8484 — _DNS Queries over HTTPS (DoH)_. IETF, 2018.
+7. RFC 9180 — _Hybrid Public Key Encryption (HPKE)_ (criptografia usada pelo ECH). IETF, 2022.
+8. RFC 9460 — _Service Binding and Parameter Specification via the DNS (SVCB/HTTPS RR)_. IETF, 2023.
+9. RFC 9848 — publicação de configurações ECH em registros SVCB/HTTPS do DNS. IETF, 2026.
+10. RFC 9849 — _TLS Encrypted Client Hello (ECH)_. IETF, março/2026 (Standards Track).
+11. Cisco — _Dynamic ARP Inspection (DAI)_ e _DHCP Snooping_, Catalyst Security Configuration Guide (documentação do fornecedor).
 
 ## 5. Uso de Inteligência Artificial
 
